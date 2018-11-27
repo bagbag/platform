@@ -27,7 +27,22 @@ describe('EffectSources', () => {
 
     effectSources.addEffects(effectSource);
 
-    expect(effectSources.next).toHaveBeenCalledWith(effectSource);
+    expect(effectSources.next).toHaveBeenCalledWith({
+      effectSourceInstance: effectSource,
+      identifier: {},
+    });
+  });
+
+  it('should be possible add an identifier to "addEffects"', () => {
+    const effectSource = {};
+    spyOn(effectSources, 'next');
+
+    effectSources.addEffects(effectSource, 'custom-identifier');
+
+    expect(effectSources.next).toHaveBeenCalledWith({
+      effectSourceInstance: effectSource,
+      identifier: 'custom-identifier',
+    });
   });
 
   describe('toActions() Operator', () => {
@@ -83,7 +98,9 @@ describe('EffectSources', () => {
     }
 
     it('should resolve effects from instances', () => {
-      const sources$ = cold('--a--', { a: new SourceA() });
+      const sources$ = cold('--a--', {
+        a: { effectSourceInstance: new SourceA() },
+      });
       const expected = cold('--a--', { a });
 
       const output = toActions(sources$);
@@ -93,7 +110,7 @@ describe('EffectSources', () => {
 
     it('should ignore duplicate sources', () => {
       const sources$ = cold('--a--a--a--', {
-        a: new SourceA(),
+        a: { effectSourceInstance: new SourceA() },
       });
       const expected = cold('--a--------', { a });
 
@@ -102,11 +119,24 @@ describe('EffectSources', () => {
       expect(output).toBeObservable(expected);
     });
 
-    it('should resolve effects from same class but different instances', () => {
+    it('should ignore sources with the same identifier', () => {
       const sources$ = cold('--a--b--c--', {
-        a: new SourceA(),
-        b: new SourceA(),
-        c: new SourceA(),
+        a: { effectSourceInstance: new SourceA(), identifier: 'a' },
+        b: { effectSourceInstance: new SourceB(), identifier: 'a' },
+        c: { effectSourceInstance: new SourceC(), identifier: 'a' },
+      });
+      const expected = cold('--a--------', { a });
+
+      const output = toActions(sources$);
+
+      expect(output).toBeObservable(expected);
+    });
+
+    it('should resolve effects from same class but with different identifiers', () => {
+      const sources$ = cold('--a--b--c--', {
+        a: { effectSourceInstance: new SourceA(), identifier: 'a' },
+        b: { effectSourceInstance: new SourceA(), identifier: 'b' },
+        c: { effectSourceInstance: new SourceA(), identifier: 'c' },
       });
       const expected = cold('--a--a--a--', { a });
 
@@ -116,7 +146,7 @@ describe('EffectSources', () => {
     });
 
     it('should report an error if an effect dispatches an invalid action', () => {
-      const sources$ = of(new SourceD());
+      const sources$ = of({ effectSourceInstance: new SourceD() });
 
       toActions(sources$).subscribe();
 
@@ -128,7 +158,7 @@ describe('EffectSources', () => {
     });
 
     it('should report an error if an effect dispatches an `undefined`', () => {
-      const sources$ = of(new SourceE());
+      const sources$ = of({ effectSourceInstance: new SourceE() });
 
       toActions(sources$).subscribe();
 
@@ -138,7 +168,7 @@ describe('EffectSources', () => {
     });
 
     it('should report an error if an effect dispatches a `null`', () => {
-      const sources$ = of(new SourceF());
+      const sources$ = of({ effectSourceInstance: new SourceF() });
 
       toActions(sources$).subscribe();
 
@@ -148,7 +178,7 @@ describe('EffectSources', () => {
     });
 
     it(`should not break when the action in the error message can't be stringified`, () => {
-      const sources$ = of(new SourceG());
+      const sources$ = of({ effectSourceInstance: new SourceG() });
 
       toActions(sources$).subscribe();
 
@@ -161,7 +191,7 @@ describe('EffectSources', () => {
 
     it('should not complete the group if just one effect completes', () => {
       const sources$ = cold('g', {
-        g: new SourceH(),
+        g: { effectSourceInstance: new SourceH() },
       });
       const expected = cold('a----b-----', { a: 'value', b: 'update' });
 
