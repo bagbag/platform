@@ -31,7 +31,7 @@ export class EffectSources extends Subject<any> {
     return this.pipe(
       groupBy(getSourceForInstance),
       mergeMap(source$ =>
-        source$.pipe(groupBy(instance => instance.identifier || ''))
+        source$.pipe(groupBy(instance => instance.effectIdentifier || ''))
       ),
       mergeMap(source$ =>
         source$.pipe(

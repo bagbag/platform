@@ -85,20 +85,20 @@ describe('EffectSources', () => {
     }
 
     class SourceWithIdentifier implements EffectIdentifier {
-      identifier: string;
+      effectIdentifier: string;
       @Effect() i$ = alwaysOf(i);
 
       constructor(identifier: string) {
-        this.identifier = identifier;
+        this.effectIdentifier = identifier;
       }
     }
 
     class SourceWithIdentifier2 implements EffectIdentifier {
-      identifier: string;
+      effectIdentifier: string;
       @Effect() i2$ = alwaysOf(i2);
 
       constructor(identifier: string) {
-        this.identifier = identifier;
+        this.effectIdentifier = identifier;
       }
     }
 
