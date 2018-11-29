@@ -15,19 +15,13 @@ import { resolveEffectSource } from './effects_resolver';
 import { getSourceForInstance } from './effects_metadata';
 
 @Injectable()
-export class EffectSources extends Subject<{
-  identifier: any;
-  effectSourceInstance: any;
-}> {
+export class EffectSources extends Subject<any> {
   constructor(private errorHandler: ErrorHandler) {
     super();
   }
 
-  addEffects(
-    effectSourceInstance: any,
-    identifier: any = getSourceForInstance(effectSourceInstance)
-  ) {
-    this.next({ identifier, effectSourceInstance });
+  addEffects(effectSourceInstance: any) {
+    this.next(effectSourceInstance);
   }
 
   /**
@@ -35,12 +29,10 @@ export class EffectSources extends Subject<{
    */
   toActions(): Observable<Action> {
     return this.pipe(
-      groupBy(source => source.identifier),
+      groupBy(source => source.identifier || getSourceForInstance(source)),
       mergeMap(source$ =>
         source$.pipe(
-          exhaustMap(source =>
-            resolveEffectSource(source.effectSourceInstance)
-          ),
+          exhaustMap(resolveEffectSource),
           map(output => {
             verifyOutput(output, this.errorHandler);
 
