@@ -29,7 +29,10 @@ export class EffectSources extends Subject<any> {
    */
   toActions(): Observable<Action> {
     return this.pipe(
-      groupBy(source => source.identifier || getSourceForInstance(source)),
+      groupBy(getSourceForInstance),
+      mergeMap(source$ =>
+        source$.pipe(groupBy(instance => instance.identifier || ''))
+      ),
       mergeMap(source$ =>
         source$.pipe(
           exhaustMap(resolveEffectSource),

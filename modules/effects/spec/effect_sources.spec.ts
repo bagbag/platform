@@ -38,6 +38,7 @@ describe('EffectSources', () => {
     const e = undefined;
     const f = null;
     const i = { type: 'From Source Identifier' };
+    const i2 = { type: 'From Source Identifier 2' };
 
     let circularRef = {} as any;
     circularRef.circularRef = circularRef;
@@ -92,6 +93,15 @@ describe('EffectSources', () => {
       }
     }
 
+    class SourceWithIdentifier2 implements EffectIdentifier {
+      identifier: string;
+      @Effect() i2$ = alwaysOf(i2);
+
+      constructor(identifier: string) {
+        this.identifier = identifier;
+      }
+    }
+
     it('should resolve effects from instances', () => {
       const sources$ = cold('--a--', { a: new SourceA() });
       const expected = cold('--a--', { a });
@@ -119,6 +129,20 @@ describe('EffectSources', () => {
         c: new SourceWithIdentifier('c'),
       });
       const expected = cold('--i--i--i--', { i });
+
+      const output = toActions(sources$);
+
+      expect(output).toBeObservable(expected);
+    });
+
+    it('should resolve effects with same identifiers but different classes', () => {
+      const sources$ = cold('--a--b--c--d--', {
+        a: new SourceWithIdentifier('a'),
+        b: new SourceWithIdentifier2('b'),
+        c: new SourceWithIdentifier('a'),
+        d: new SourceWithIdentifier2('b'),
+      });
+      const expected = cold('--a--b-----', { a: i, b: i2 });
 
       const output = toActions(sources$);
 
