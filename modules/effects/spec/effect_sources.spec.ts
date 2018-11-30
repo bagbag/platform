@@ -135,20 +135,6 @@ describe('EffectSources', () => {
       expect(output).toBeObservable(expected);
     });
 
-    it('should resolve effects with same identifiers but different classes', () => {
-      const sources$ = cold('--a--b--c--d--', {
-        a: new SourceWithIdentifier('a'),
-        b: new SourceWithIdentifier2('b'),
-        c: new SourceWithIdentifier('a'),
-        d: new SourceWithIdentifier2('b'),
-      });
-      const expected = cold('--a--b-----', { a: i, b: i2 });
-
-      const output = toActions(sources$);
-
-      expect(output).toBeObservable(expected);
-    });
-
     it('should ignore effects with the same identifier', () => {
       const sources$ = cold('--a--b--c--', {
         a: new SourceWithIdentifier('a'),
@@ -156,6 +142,20 @@ describe('EffectSources', () => {
         c: new SourceWithIdentifier('a'),
       });
       const expected = cold('--i--------', { i });
+
+      const output = toActions(sources$);
+
+      expect(output).toBeObservable(expected);
+    });
+
+    it('should resolve effects with same identifiers but different classes', () => {
+      const sources$ = cold('--a--b--c--d--', {
+        a: new SourceWithIdentifier('a'),
+        b: new SourceWithIdentifier2('a'),
+        c: new SourceWithIdentifier('b'),
+        d: new SourceWithIdentifier2('b'),
+      });
+      const expected = cold('--a--b--a--b--', { a: i, b: i2 });
 
       const output = toActions(sources$);
 
